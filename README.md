@@ -76,3 +76,4 @@ URLs:
    - "Enviar pedido por WhatsApp" abre chat pre-armado con detalle del pedido
    - Número de WhatsApp configurable en `VITE_WHATSAPP_PHONE` (.env)
 3. Mercado Pago + integración con catálogo de Meta
+# Litoral-maq
