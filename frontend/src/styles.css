@@ -203,6 +203,66 @@ button {
   padding: 2rem;
 }
 
+.stock-value {
+  font-weight: 600;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.actions-cell button {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.movement-row td,
+.history-row td {
+  background: #f9fafb;
+  padding: 1rem;
+}
+
+.movement-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.movement-form select,
+.movement-form input[type="number"],
+.movement-form input[type="text"] {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.movement-form input[type="number"] {
+  width: 110px;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.history-table th {
+  color: #6b7280;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
 /* Catalog page */
 
 .catalog-page {

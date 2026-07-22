@@ -37,4 +37,8 @@ export const api = {
   updateProduct: (token, id, data) => request(`/products/${id}`, { method: "PUT", body: data, token }),
   deleteProduct: (token, id) => request(`/products/${id}`, { method: "DELETE", token }),
   importProducts: (token, rows) => request("/products/import", { method: "POST", body: { rows }, token }),
+  createMovement: (token, id, data) =>
+    request(`/products/${id}/movimientos`, { method: "POST", body: data, token }),
+  getMovements: (token, id) => request(`/products/${id}/movimientos`, { token }),
+  getRecentMovements: (token) => request("/products/movimientos/recientes", { token }),
 };

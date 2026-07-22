@@ -4,6 +4,13 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { api } from "../api.js";
 
 const emptyForm = { codigo: "", articulo: "", precio: "", stock: "", categoria: "" };
+const emptyMovement = { tipo: "entrada", valor: "", motivo: "" };
+
+const TIPO_LABELS = { entrada: "Entrada", salida: "Salida", ajuste: "Ajuste" };
+
+function formatFecha(iso) {
+  return new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+}
 
 export default function AdminProducts() {
   const { token, username, logout } = useAuth();
@@ -17,6 +24,12 @@ export default function AdminProducts() {
   const [showForm, setShowForm] = useState(false);
   const [importSummary, setImportSummary] = useState(null);
   const fileInputRef = useRef(null);
+  const [movementRowId, setMovementRowId] = useState(null);
+  const [movementForm, setMovementForm] = useState(emptyMovement);
+  const [movementError, setMovementError] = useState("");
+  const [historyRowId, setHistoryRowId] = useState(null);
+  const [historyData, setHistoryData] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -51,7 +64,7 @@ export default function AdminProducts() {
 
   const handleFieldBlur = async (product, field, value) => {
     try {
-      const parsed = field === "precio" || field === "stock" ? Number(value) : value;
+      const parsed = field === "precio" ? Number(value) : value;
       await api.updateProduct(token, product.id, { [field]: parsed });
       load();
     } catch (err) {
@@ -112,6 +125,48 @@ export default function AdminProducts() {
     });
 
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const openMovement = (product) => {
+    setHistoryRowId(null);
+    setMovementError("");
+    setMovementForm(emptyMovement);
+    setMovementRowId((current) => (current === product.id ? null : product.id));
+  };
+
+  const handleMovementSubmit = async (product, e) => {
+    e.preventDefault();
+    setMovementError("");
+    try {
+      await api.createMovement(token, product.id, {
+        tipo: movementForm.tipo,
+        valor: Number(movementForm.valor),
+        motivo: movementForm.motivo,
+      });
+      setMovementRowId(null);
+      setMovementForm(emptyMovement);
+      load();
+    } catch (err) {
+      setMovementError(err.message);
+    }
+  };
+
+  const toggleHistory = async (product) => {
+    setMovementRowId(null);
+    if (historyRowId === product.id) {
+      setHistoryRowId(null);
+      return;
+    }
+    setHistoryRowId(product.id);
+    setHistoryLoading(true);
+    try {
+      const data = await api.getMovements(token, product.id);
+      setHistoryData(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setHistoryLoading(false);
+    }
   };
 
   return (
@@ -233,49 +288,128 @@ export default function AdminProducts() {
           </thead>
           <tbody>
             {products.map((p) => (
-              <tr key={p.id} className={p.lowStock ? "low-stock-row" : ""}>
-                <td>{p.codigo}</td>
-                <td>
-                  <input
-                    className="cell-input"
-                    value={p.articulo}
-                    onChange={(e) => handleFieldChange(p, "articulo", e.target.value)}
-                    onBlur={(e) => handleFieldBlur(p, "articulo", e.target.value)}
-                  />
-                </td>
-                <td>
-                  <input
-                    className="cell-input"
-                    value={p.categoria}
-                    onChange={(e) => handleFieldChange(p, "categoria", e.target.value)}
-                    onBlur={(e) => handleFieldBlur(p, "categoria", e.target.value)}
-                  />
-                </td>
-                <td>
-                  <input
-                    className="cell-input cell-number"
-                    type="number"
-                    step="0.01"
-                    value={p.precio}
-                    onChange={(e) => handleFieldChange(p, "precio", e.target.value)}
-                    onBlur={(e) => handleFieldBlur(p, "precio", e.target.value)}
-                  />
-                </td>
-                <td>
-                  <input
-                    className="cell-input cell-number"
-                    type="number"
-                    value={p.stock}
-                    onChange={(e) => handleFieldChange(p, "stock", e.target.value)}
-                    onBlur={(e) => handleFieldBlur(p, "stock", e.target.value)}
-                  />
-                </td>
-                <td>
-                  <button className="btn-danger" onClick={() => handleDelete(p)}>
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
+              <React.Fragment key={p.id}>
+                <tr className={p.lowStock ? "low-stock-row" : ""}>
+                  <td>{p.codigo}</td>
+                  <td>
+                    <input
+                      className="cell-input"
+                      value={p.articulo}
+                      onChange={(e) => handleFieldChange(p, "articulo", e.target.value)}
+                      onBlur={(e) => handleFieldBlur(p, "articulo", e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      className="cell-input"
+                      value={p.categoria}
+                      onChange={(e) => handleFieldChange(p, "categoria", e.target.value)}
+                      onBlur={(e) => handleFieldBlur(p, "categoria", e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      className="cell-input cell-number"
+                      type="number"
+                      step="0.01"
+                      value={p.precio}
+                      onChange={(e) => handleFieldChange(p, "precio", e.target.value)}
+                      onBlur={(e) => handleFieldBlur(p, "precio", e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <span className="stock-value">{p.stock}</span>
+                  </td>
+                  <td className="actions-cell">
+                    <button className="btn-secondary" onClick={() => openMovement(p)}>
+                      {movementRowId === p.id ? "Cerrar" : "Movimiento"}
+                    </button>
+                    <button className="btn-secondary" onClick={() => toggleHistory(p)}>
+                      {historyRowId === p.id ? "Cerrar" : "Historial"}
+                    </button>
+                    <button className="btn-danger" onClick={() => handleDelete(p)}>
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+
+                {movementRowId === p.id && (
+                  <tr className="movement-row">
+                    <td colSpan={6}>
+                      <form className="movement-form" onSubmit={(e) => handleMovementSubmit(p, e)}>
+                        <span>
+                          Stock actual: <strong>{p.stock}</strong>
+                        </span>
+                        <select
+                          value={movementForm.tipo}
+                          onChange={(e) => setMovementForm({ ...movementForm, tipo: e.target.value })}
+                        >
+                          <option value="entrada">Entrada</option>
+                          <option value="salida">Salida</option>
+                          <option value="ajuste">Ajuste (nuevo stock exacto)</option>
+                        </select>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder={movementForm.tipo === "ajuste" ? "Nuevo stock" : "Cantidad"}
+                          value={movementForm.valor}
+                          onChange={(e) => setMovementForm({ ...movementForm, valor: e.target.value })}
+                          required
+                        />
+                        <input
+                          type="text"
+                          placeholder="Motivo (opcional)"
+                          value={movementForm.motivo}
+                          onChange={(e) => setMovementForm({ ...movementForm, motivo: e.target.value })}
+                        />
+                        <button type="submit" className="btn-primary">
+                          Registrar
+                        </button>
+                        {movementError && <span className="error">{movementError}</span>}
+                      </form>
+                    </td>
+                  </tr>
+                )}
+
+                {historyRowId === p.id && (
+                  <tr className="history-row">
+                    <td colSpan={6}>
+                      {historyLoading ? (
+                        <p>Cargando historial...</p>
+                      ) : historyData.length === 0 ? (
+                        <p className="empty-state">Sin movimientos registrados para este producto.</p>
+                      ) : (
+                        <table className="history-table">
+                          <thead>
+                            <tr>
+                              <th>Fecha</th>
+                              <th>Tipo</th>
+                              <th>Cantidad</th>
+                              <th>Stock anterior</th>
+                              <th>Stock nuevo</th>
+                              <th>Motivo</th>
+                              <th>Usuario</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {historyData.map((m) => (
+                              <tr key={m.id}>
+                                <td>{formatFecha(m.createdAt)}</td>
+                                <td>{TIPO_LABELS[m.tipo] || m.tipo}</td>
+                                <td>{m.cantidad > 0 ? `+${m.cantidad}` : m.cantidad}</td>
+                                <td>{m.stockAnterior}</td>
+                                <td>{m.stockNuevo}</td>
+                                <td>{m.motivo || "—"}</td>
+                                <td>{m.usuario || "—"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
             {products.length === 0 && (
               <tr>
