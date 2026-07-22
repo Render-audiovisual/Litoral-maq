@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api.js";
 import { useCart } from "../context/CartContext.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import PlaceholderIcon from "../components/PlaceholderIcon.jsx";
 
 const DESTACADOS_COUNT = 8;
 
@@ -36,7 +37,8 @@ export default function Home() {
         <div className="categorias-grid">
           {categorias.map((c) => (
             <Link key={c} to={`/productos/${encodeURIComponent(c)}`} className="categoria-card">
-              {c}
+              <PlaceholderIcon className="placeholder-icon" />
+              <span>{c}</span>
             </Link>
           ))}
         </div>

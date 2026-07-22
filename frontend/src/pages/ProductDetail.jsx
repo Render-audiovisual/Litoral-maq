@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { api } from "../api.js";
 import { useCart } from "../context/CartContext.jsx";
+import PlaceholderIcon from "../components/PlaceholderIcon.jsx";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -52,7 +53,8 @@ export default function ProductDetail() {
         {product.fotoUrl ? (
           <img className="product-detail-image" src={product.fotoUrl} alt={product.articulo} />
         ) : (
-          <div className="product-detail-image">
+          <div className="product-detail-image product-detail-image-empty">
+            <PlaceholderIcon className="placeholder-icon placeholder-icon-lg" />
             <span>{product.categoria}</span>
           </div>
         )}

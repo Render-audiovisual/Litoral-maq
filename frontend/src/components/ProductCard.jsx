@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import PlaceholderIcon from "./PlaceholderIcon.jsx";
 
 export default function ProductCard({ product, onAddToCart }) {
   const handleAdd = (e) => {
@@ -16,7 +17,10 @@ export default function ProductCard({ product, onAddToCart }) {
       {product.fotoUrl ? (
         <img className="product-card-image" src={product.fotoUrl} alt={product.articulo} />
       ) : (
-        <div className="product-card-image product-card-image-empty">{product.categoria}</div>
+        <div className="product-card-image product-card-image-empty">
+          <PlaceholderIcon className="placeholder-icon" />
+          <span>{product.categoria}</span>
+        </div>
       )}
       <div className="product-header">
         <h3>{product.articulo}</h3>
