@@ -3,13 +3,38 @@ import Papa from "papaparse";
 import { useAuth } from "../context/AuthContext.jsx";
 import { api } from "../api.js";
 
-const emptyForm = { codigo: "", articulo: "", precio: "", stock: "", categoria: "" };
+const emptyForm = { codigo: "", articulo: "", precio: "", stock: "", categoria: "", marca: "" };
 const emptyMovement = { tipo: "entrada", valor: "", motivo: "" };
 
 const TIPO_LABELS = { entrada: "Entrada", salida: "Salida", ajuste: "Ajuste" };
 
+const IMAGE_MAX_WIDTH = 800;
+const IMAGE_QUALITY = 0.8;
+
 function formatFecha(iso) {
   return new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+}
+
+function compressImage(file, maxWidth = IMAGE_MAX_WIDTH, quality = IMAGE_QUALITY) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("No se pudo procesar la imagen"));
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 export default function AdminProducts() {
@@ -30,6 +55,10 @@ export default function AdminProducts() {
   const [historyRowId, setHistoryRowId] = useState(null);
   const [historyData, setHistoryData] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [imageRowId, setImageRowId] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageError, setImageError] = useState("");
+  const [imageSaving, setImageSaving] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -73,8 +102,17 @@ export default function AdminProducts() {
     }
   };
 
+  const handleToggleActivo = async (product) => {
+    try {
+      await api.updateProduct(token, product.id, { activo: !product.activo });
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleDelete = async (product) => {
-    if (!confirm(`¿Eliminar "${product.articulo}"?`)) return;
+    if (!confirm(`¿Eliminar "${product.articulo}" definitivamente? Se borra también su historial de movimientos. Si preferís conservarlo, usá "Desactivar".`)) return;
     try {
       await api.deleteProduct(token, product.id);
       load();
@@ -113,6 +151,7 @@ export default function AdminProducts() {
           precio: r.PRECIO || r.precio,
           stock: r.STOCK || r.stock || 0,
           categoria: r.CATEGORIA || r.categoria || "Sin categoría",
+          marca: r.MARCA || r.marca || "",
         }));
         try {
           const summary = await api.importProducts(token, rows);
@@ -129,6 +168,7 @@ export default function AdminProducts() {
 
   const openMovement = (product) => {
     setHistoryRowId(null);
+    setImageRowId(null);
     setMovementError("");
     setMovementForm(emptyMovement);
     setMovementRowId((current) => (current === product.id ? null : product.id));
@@ -153,6 +193,7 @@ export default function AdminProducts() {
 
   const toggleHistory = async (product) => {
     setMovementRowId(null);
+    setImageRowId(null);
     if (historyRowId === product.id) {
       setHistoryRowId(null);
       return;
@@ -166,6 +207,55 @@ export default function AdminProducts() {
       setError(err.message);
     } finally {
       setHistoryLoading(false);
+    }
+  };
+
+  const openImage = (product) => {
+    setMovementRowId(null);
+    setHistoryRowId(null);
+    setImageError("");
+    setImagePreview(product.fotoUrl || null);
+    setImageRowId((current) => (current === product.id ? null : product.id));
+  };
+
+  const handleImageFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageError("");
+    try {
+      const dataUrl = await compressImage(file);
+      setImagePreview(dataUrl);
+    } catch (err) {
+      setImageError(err.message);
+    }
+  };
+
+  const handleImageSave = async (product) => {
+    setImageSaving(true);
+    setImageError("");
+    try {
+      await api.updateProduct(token, product.id, { fotoUrl: imagePreview });
+      setImageRowId(null);
+      load();
+    } catch (err) {
+      setImageError(err.message);
+    } finally {
+      setImageSaving(false);
+    }
+  };
+
+  const handleImageRemove = async (product) => {
+    setImageSaving(true);
+    setImageError("");
+    try {
+      await api.updateProduct(token, product.id, { fotoUrl: null });
+      setImagePreview(null);
+      setImageRowId(null);
+      load();
+    } catch (err) {
+      setImageError(err.message);
+    } finally {
+      setImageSaving(false);
     }
   };
 
@@ -247,6 +337,11 @@ export default function AdminProducts() {
             required
           />
           <input
+            placeholder="Marca (opcional)"
+            value={form.marca}
+            onChange={(e) => setForm({ ...form, marca: e.target.value })}
+          />
+          <input
             placeholder="Precio"
             type="number"
             step="0.01"
@@ -280,6 +375,7 @@ export default function AdminProducts() {
             <tr>
               <th>Código</th>
               <th>Artículo</th>
+              <th>Marca</th>
               <th>Categoría</th>
               <th>Precio</th>
               <th>Stock</th>
@@ -289,7 +385,11 @@ export default function AdminProducts() {
           <tbody>
             {products.map((p) => (
               <React.Fragment key={p.id}>
-                <tr className={p.lowStock ? "low-stock-row" : ""}>
+                <tr
+                  className={[p.lowStock ? "low-stock-row" : "", !p.activo ? "inactive-row" : ""]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
                   <td>{p.codigo}</td>
                   <td>
                     <input
@@ -297,6 +397,16 @@ export default function AdminProducts() {
                       value={p.articulo}
                       onChange={(e) => handleFieldChange(p, "articulo", e.target.value)}
                       onBlur={(e) => handleFieldBlur(p, "articulo", e.target.value)}
+                    />
+                    {!p.activo && <span className="inactive-badge">Inactivo</span>}
+                  </td>
+                  <td>
+                    <input
+                      className="cell-input"
+                      value={p.marca || ""}
+                      placeholder="—"
+                      onChange={(e) => handleFieldChange(p, "marca", e.target.value)}
+                      onBlur={(e) => handleFieldBlur(p, "marca", e.target.value)}
                     />
                   </td>
                   <td>
@@ -327,6 +437,12 @@ export default function AdminProducts() {
                     <button className="btn-secondary" onClick={() => toggleHistory(p)}>
                       {historyRowId === p.id ? "Cerrar" : "Historial"}
                     </button>
+                    <button className="btn-secondary" onClick={() => openImage(p)}>
+                      {imageRowId === p.id ? "Cerrar" : "Imagen"}
+                    </button>
+                    <button className="btn-secondary" onClick={() => handleToggleActivo(p)}>
+                      {p.activo ? "Desactivar" : "Activar"}
+                    </button>
                     <button className="btn-danger" onClick={() => handleDelete(p)}>
                       Eliminar
                     </button>
@@ -335,7 +451,7 @@ export default function AdminProducts() {
 
                 {movementRowId === p.id && (
                   <tr className="movement-row">
-                    <td colSpan={6}>
+                    <td colSpan={7}>
                       <form className="movement-form" onSubmit={(e) => handleMovementSubmit(p, e)}>
                         <span>
                           Stock actual: <strong>{p.stock}</strong>
@@ -373,7 +489,7 @@ export default function AdminProducts() {
 
                 {historyRowId === p.id && (
                   <tr className="history-row">
-                    <td colSpan={6}>
+                    <td colSpan={7}>
                       {historyLoading ? (
                         <p>Cargando historial...</p>
                       ) : historyData.length === 0 ? (
@@ -409,11 +525,49 @@ export default function AdminProducts() {
                     </td>
                   </tr>
                 )}
+
+                {imageRowId === p.id && (
+                  <tr className="image-row">
+                    <td colSpan={7}>
+                      <div className="image-form">
+                        {imagePreview ? (
+                          <img className="image-preview" src={imagePreview} alt={p.articulo} />
+                        ) : (
+                          <div className="image-preview image-preview-empty">Sin imagen</div>
+                        )}
+                        <div className="image-form-actions">
+                          <input type="file" accept="image/*" onChange={handleImageFile} />
+                          <div>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              onClick={() => handleImageSave(p)}
+                              disabled={imageSaving || !imagePreview}
+                            >
+                              Guardar imagen
+                            </button>
+                            {p.fotoUrl && (
+                              <button
+                                type="button"
+                                className="btn-danger"
+                                onClick={() => handleImageRemove(p)}
+                                disabled={imageSaving}
+                              >
+                                Quitar imagen
+                              </button>
+                            )}
+                          </div>
+                          {imageError && <span className="error">{imageError}</span>}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </React.Fragment>
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={6} className="empty-state">
+                <td colSpan={7} className="empty-state">
                   No hay productos que coincidan con la búsqueda.
                 </td>
               </tr>

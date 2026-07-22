@@ -1,15 +1,30 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const prisma = require("../prismaClient");
 const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 const LOW_STOCK_THRESHOLD = 5;
 
+function isAuthenticated(req) {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  if (!token) return false;
+
+  try {
+    jwt.verify(token, process.env.JWT_SECRET);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
 router.get("/", async (req, res) => {
   const { search, categoria } = req.query;
 
   const where = {
     AND: [
+      isAuthenticated(req) ? {} : { activo: true },
       categoria ? { categoria } : {},
       search
         ? {
@@ -48,7 +63,7 @@ router.get("/:id", async (req, res) => {
 
   const product = await prisma.product.findUnique({ where: { id } });
 
-  if (!product) {
+  if (!product || (!product.activo && !isAuthenticated(req))) {
     return res.status(404).json({ error: "Producto no encontrado" });
   }
 
@@ -58,7 +73,7 @@ router.get("/:id", async (req, res) => {
 router.use(requireAuth);
 
 router.post("/", async (req, res) => {
-  const { codigo, articulo, precio, stock, categoria, fotoUrl } = req.body || {};
+  const { codigo, articulo, precio, stock, categoria, marca, fotoUrl } = req.body || {};
 
   if (!codigo || !articulo || precio == null || !categoria) {
     return res.status(400).json({ error: "codigo, articulo, precio y categoria son requeridos" });
@@ -74,6 +89,7 @@ router.post("/", async (req, res) => {
         precio: Number(precio),
         stock: stockInicial,
         categoria: String(categoria),
+        marca: marca ? String(marca) : null,
         fotoUrl: fotoUrl || null,
       },
     });
@@ -103,7 +119,7 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { codigo, articulo, precio, categoria, fotoUrl } = req.body || {};
+  const { codigo, articulo, precio, categoria, marca, activo, fotoUrl } = req.body || {};
 
   try {
     const product = await prisma.product.update({
@@ -113,6 +129,8 @@ router.put("/:id", async (req, res) => {
         ...(articulo !== undefined && { articulo: String(articulo) }),
         ...(precio !== undefined && { precio: Number(precio) }),
         ...(categoria !== undefined && { categoria: String(categoria) }),
+        ...(marca !== undefined && { marca: marca ? String(marca) : null }),
+        ...(activo !== undefined && { activo: Boolean(activo) }),
         ...(fotoUrl !== undefined && { fotoUrl }),
       },
     });
@@ -213,6 +231,7 @@ router.post("/import", async (req, res) => {
     const articulo = String(row.articulo || "").trim();
     const precio = Number(row.precio);
     const categoria = String(row.categoria || "Sin categoría").trim();
+    const marca = row.marca ? String(row.marca).trim() : null;
     const stock = Number(row.stock) || 0;
 
     if (!codigo || !articulo || Number.isNaN(precio)) {
@@ -225,7 +244,7 @@ router.post("/import", async (req, res) => {
     if (existing) {
       await prisma.product.update({
         where: { codigo },
-        data: { articulo, precio, categoria, stock },
+        data: { articulo, precio, categoria, marca, stock },
       });
       if (stock !== existing.stock) {
         await prisma.stockMovement.create({
@@ -243,7 +262,7 @@ router.post("/import", async (req, res) => {
       updated += 1;
     } else {
       const created_ = await prisma.product.create({
-        data: { codigo, articulo, precio, categoria, stock },
+        data: { codigo, articulo, precio, categoria, marca, stock },
       });
       if (stock > 0) {
         await prisma.stockMovement.create({

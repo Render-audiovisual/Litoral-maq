@@ -13,11 +13,18 @@ export default function ProductCard({ product, onAddToCart }) {
       to={`/producto/${product.id}`}
       className={`product-card ${product.stock === 0 ? "out-of-stock" : ""}`}
     >
+      {product.fotoUrl ? (
+        <img className="product-card-image" src={product.fotoUrl} alt={product.articulo} />
+      ) : (
+        <div className="product-card-image product-card-image-empty">{product.categoria}</div>
+      )}
       <div className="product-header">
         <h3>{product.articulo}</h3>
         <span className="product-code">{product.codigo}</span>
       </div>
-      <p className="product-categoria">{product.categoria}</p>
+      <p className="product-categoria">
+        {product.marca ? `${product.marca} · ${product.categoria}` : product.categoria}
+      </p>
       <div className="product-price">
         ${product.precio.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
       </div>

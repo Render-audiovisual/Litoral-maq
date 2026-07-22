@@ -263,6 +263,61 @@ button {
   font-size: 0.75rem;
 }
 
+.inactive-row {
+  opacity: 0.55;
+}
+
+.inactive-badge {
+  display: inline-block;
+  margin-top: 0.3rem;
+  background: #e5e7eb;
+  color: #4b5563;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.image-row td {
+  background: #f9fafb;
+  padding: 1rem;
+}
+
+.image-form {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.image-preview {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #f3f4f6;
+}
+
+.image-preview-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.image-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.image-form-actions > div {
+  display: flex;
+  gap: 0.5rem;
+}
+
 /* Site header / nav / footer */
 
 .site {
@@ -476,6 +531,7 @@ button {
   background: #f3f4f6;
   border-radius: 8px;
   min-height: 260px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -483,6 +539,13 @@ button {
   font-weight: 600;
   text-align: center;
   padding: 1rem;
+  object-fit: cover;
+}
+
+.product-marca {
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .product-detail-info {
@@ -577,6 +640,25 @@ button {
 
 .product-card.out-of-stock {
   opacity: 0.6;
+}
+
+.product-card-image {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #f3f4f6;
+}
+
+.product-card-image-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.5rem;
 }
 
 .product-header {

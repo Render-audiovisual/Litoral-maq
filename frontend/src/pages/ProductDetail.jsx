@@ -49,12 +49,17 @@ export default function ProductDetail() {
       </p>
 
       <div className="product-detail">
-        <div className="product-detail-image">
-          <span>{product.categoria}</span>
-        </div>
+        {product.fotoUrl ? (
+          <img className="product-detail-image" src={product.fotoUrl} alt={product.articulo} />
+        ) : (
+          <div className="product-detail-image">
+            <span>{product.categoria}</span>
+          </div>
+        )}
 
         <div className="product-detail-info">
           <h1>{product.articulo}</h1>
+          {product.marca && <span className="product-marca">{product.marca}</span>}
           <span className="product-code">Código: {product.codigo}</span>
 
           <div className="product-price">
