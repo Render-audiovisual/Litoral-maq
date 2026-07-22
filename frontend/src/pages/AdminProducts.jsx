@@ -350,210 +350,214 @@ export default function AdminProducts() {
       {loading ? (
         <p>Cargando...</p>
       ) : (
-        <table className="products-table">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Artículo</th>
-              <th>Marca</th>
-              <th>Categoría</th>
-              <th>Precio</th>
-              <th>Stock</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <React.Fragment key={p.id}>
-                <tr
-                  className={[p.lowStock ? "low-stock-row" : "", !p.activo ? "inactive-row" : ""]
-                    .filter(Boolean)
-                    .join(" ")}
-                >
-                  <td>{p.codigo}</td>
-                  <td>
+        <div className="products-list">
+          <div className="product-row product-row-header">
+            <span>Código</span>
+            <span>Artículo</span>
+            <span>Marca</span>
+            <span>Categoría</span>
+            <span>Precio</span>
+            <span>Stock</span>
+            <span></span>
+          </div>
+
+          {products.map((p) => (
+            <div key={p.id} className="product-row-group">
+              <div
+                className={[
+                  "product-row",
+                  p.lowStock ? "low-stock-row" : "",
+                  !p.activo ? "inactive-row" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                <span className="product-field product-field-code">
+                  <span className="field-label">Código</span>
+                  {p.codigo}
+                  {!p.activo && <span className="inactive-badge">Inactivo</span>}
+                </span>
+
+                <label className="product-field">
+                  <span className="field-label">Artículo</span>
+                  <input
+                    className="cell-input"
+                    value={p.articulo}
+                    onChange={(e) => handleFieldChange(p, "articulo", e.target.value)}
+                    onBlur={(e) => handleFieldBlur(p, "articulo", e.target.value)}
+                  />
+                </label>
+
+                <label className="product-field">
+                  <span className="field-label">Marca</span>
+                  <input
+                    className="cell-input"
+                    value={p.marca || ""}
+                    placeholder="—"
+                    onChange={(e) => handleFieldChange(p, "marca", e.target.value)}
+                    onBlur={(e) => handleFieldBlur(p, "marca", e.target.value)}
+                  />
+                </label>
+
+                <label className="product-field">
+                  <span className="field-label">Categoría</span>
+                  <input
+                    className="cell-input"
+                    value={p.categoria}
+                    onChange={(e) => handleFieldChange(p, "categoria", e.target.value)}
+                    onBlur={(e) => handleFieldBlur(p, "categoria", e.target.value)}
+                  />
+                </label>
+
+                <label className="product-field">
+                  <span className="field-label">Precio</span>
+                  <input
+                    className="cell-input cell-number"
+                    type="number"
+                    step="0.01"
+                    value={p.precio}
+                    onChange={(e) => handleFieldChange(p, "precio", e.target.value)}
+                    onBlur={(e) => handleFieldBlur(p, "precio", e.target.value)}
+                  />
+                </label>
+
+                <span className="product-field">
+                  <span className="field-label">Stock</span>
+                  <span className="stock-value">{p.stock}</span>
+                </span>
+
+                <div className="product-field actions-cell">
+                  <button className="btn-secondary" onClick={() => openMovement(p)}>
+                    {movementRowId === p.id ? "Cerrar" : "Movimiento"}
+                  </button>
+                  <button className="btn-secondary" onClick={() => toggleHistory(p)}>
+                    {historyRowId === p.id ? "Cerrar" : "Historial"}
+                  </button>
+                  <button className="btn-secondary" onClick={() => openImage(p)}>
+                    {imageRowId === p.id ? "Cerrar" : "Imagen"}
+                  </button>
+                  <button className="btn-secondary" onClick={() => handleToggleActivo(p)}>
+                    {p.activo ? "Desactivar" : "Activar"}
+                  </button>
+                  <button className="btn-danger" onClick={() => handleDelete(p)}>
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+
+              {movementRowId === p.id && (
+                <div className="movement-row">
+                  <form className="movement-form" onSubmit={(e) => handleMovementSubmit(p, e)}>
+                    <span>
+                      Stock actual: <strong>{p.stock}</strong>
+                    </span>
+                    <select
+                      value={movementForm.tipo}
+                      onChange={(e) => setMovementForm({ ...movementForm, tipo: e.target.value })}
+                    >
+                      <option value="entrada">Entrada</option>
+                      <option value="salida">Salida</option>
+                      <option value="ajuste">Ajuste (nuevo stock exacto)</option>
+                    </select>
                     <input
-                      className="cell-input"
-                      value={p.articulo}
-                      onChange={(e) => handleFieldChange(p, "articulo", e.target.value)}
-                      onBlur={(e) => handleFieldBlur(p, "articulo", e.target.value)}
-                    />
-                    {!p.activo && <span className="inactive-badge">Inactivo</span>}
-                  </td>
-                  <td>
-                    <input
-                      className="cell-input"
-                      value={p.marca || ""}
-                      placeholder="—"
-                      onChange={(e) => handleFieldChange(p, "marca", e.target.value)}
-                      onBlur={(e) => handleFieldBlur(p, "marca", e.target.value)}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      className="cell-input"
-                      value={p.categoria}
-                      onChange={(e) => handleFieldChange(p, "categoria", e.target.value)}
-                      onBlur={(e) => handleFieldBlur(p, "categoria", e.target.value)}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      className="cell-input cell-number"
                       type="number"
-                      step="0.01"
-                      value={p.precio}
-                      onChange={(e) => handleFieldChange(p, "precio", e.target.value)}
-                      onBlur={(e) => handleFieldBlur(p, "precio", e.target.value)}
+                      min="0"
+                      placeholder={movementForm.tipo === "ajuste" ? "Nuevo stock" : "Cantidad"}
+                      value={movementForm.valor}
+                      onChange={(e) => setMovementForm({ ...movementForm, valor: e.target.value })}
+                      required
                     />
-                  </td>
-                  <td>
-                    <span className="stock-value">{p.stock}</span>
-                  </td>
-                  <td className="actions-cell">
-                    <button className="btn-secondary" onClick={() => openMovement(p)}>
-                      {movementRowId === p.id ? "Cerrar" : "Movimiento"}
+                    <input
+                      type="text"
+                      placeholder="Motivo (opcional)"
+                      value={movementForm.motivo}
+                      onChange={(e) => setMovementForm({ ...movementForm, motivo: e.target.value })}
+                    />
+                    <button type="submit" className="btn-primary">
+                      Registrar
                     </button>
-                    <button className="btn-secondary" onClick={() => toggleHistory(p)}>
-                      {historyRowId === p.id ? "Cerrar" : "Historial"}
-                    </button>
-                    <button className="btn-secondary" onClick={() => openImage(p)}>
-                      {imageRowId === p.id ? "Cerrar" : "Imagen"}
-                    </button>
-                    <button className="btn-secondary" onClick={() => handleToggleActivo(p)}>
-                      {p.activo ? "Desactivar" : "Activar"}
-                    </button>
-                    <button className="btn-danger" onClick={() => handleDelete(p)}>
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                    {movementError && <span className="error">{movementError}</span>}
+                  </form>
+                </div>
+              )}
 
-                {movementRowId === p.id && (
-                  <tr className="movement-row">
-                    <td colSpan={7}>
-                      <form className="movement-form" onSubmit={(e) => handleMovementSubmit(p, e)}>
-                        <span>
-                          Stock actual: <strong>{p.stock}</strong>
-                        </span>
-                        <select
-                          value={movementForm.tipo}
-                          onChange={(e) => setMovementForm({ ...movementForm, tipo: e.target.value })}
+              {historyRowId === p.id && (
+                <div className="history-row">
+                  {historyLoading ? (
+                    <p>Cargando historial...</p>
+                  ) : historyData.length === 0 ? (
+                    <p className="empty-state">Sin movimientos registrados para este producto.</p>
+                  ) : (
+                    <table className="history-table">
+                      <thead>
+                        <tr>
+                          <th>Fecha</th>
+                          <th>Tipo</th>
+                          <th>Cantidad</th>
+                          <th>Stock anterior</th>
+                          <th>Stock nuevo</th>
+                          <th>Motivo</th>
+                          <th>Usuario</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historyData.map((m) => (
+                          <tr key={m.id}>
+                            <td>{formatFecha(m.createdAt)}</td>
+                            <td>{TIPO_LABELS[m.tipo] || m.tipo}</td>
+                            <td>{m.cantidad > 0 ? `+${m.cantidad}` : m.cantidad}</td>
+                            <td>{m.stockAnterior}</td>
+                            <td>{m.stockNuevo}</td>
+                            <td>{m.motivo || "—"}</td>
+                            <td>{m.usuario || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
+
+              {imageRowId === p.id && (
+                <div className="image-row">
+                  <div className="image-form">
+                    {imagePreview ? (
+                      <img className="image-preview" src={imagePreview} alt={p.articulo} />
+                    ) : (
+                      <div className="image-preview image-preview-empty">Sin imagen</div>
+                    )}
+                    <div className="image-form-actions">
+                      <input type="file" accept="image/*" onChange={handleImageFile} />
+                      <div>
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          onClick={() => handleImageSave(p)}
+                          disabled={imageSaving || !imagePreview}
                         >
-                          <option value="entrada">Entrada</option>
-                          <option value="salida">Salida</option>
-                          <option value="ajuste">Ajuste (nuevo stock exacto)</option>
-                        </select>
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder={movementForm.tipo === "ajuste" ? "Nuevo stock" : "Cantidad"}
-                          value={movementForm.valor}
-                          onChange={(e) => setMovementForm({ ...movementForm, valor: e.target.value })}
-                          required
-                        />
-                        <input
-                          type="text"
-                          placeholder="Motivo (opcional)"
-                          value={movementForm.motivo}
-                          onChange={(e) => setMovementForm({ ...movementForm, motivo: e.target.value })}
-                        />
-                        <button type="submit" className="btn-primary">
-                          Registrar
+                          Guardar imagen
                         </button>
-                        {movementError && <span className="error">{movementError}</span>}
-                      </form>
-                    </td>
-                  </tr>
-                )}
-
-                {historyRowId === p.id && (
-                  <tr className="history-row">
-                    <td colSpan={7}>
-                      {historyLoading ? (
-                        <p>Cargando historial...</p>
-                      ) : historyData.length === 0 ? (
-                        <p className="empty-state">Sin movimientos registrados para este producto.</p>
-                      ) : (
-                        <table className="history-table">
-                          <thead>
-                            <tr>
-                              <th>Fecha</th>
-                              <th>Tipo</th>
-                              <th>Cantidad</th>
-                              <th>Stock anterior</th>
-                              <th>Stock nuevo</th>
-                              <th>Motivo</th>
-                              <th>Usuario</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {historyData.map((m) => (
-                              <tr key={m.id}>
-                                <td>{formatFecha(m.createdAt)}</td>
-                                <td>{TIPO_LABELS[m.tipo] || m.tipo}</td>
-                                <td>{m.cantidad > 0 ? `+${m.cantidad}` : m.cantidad}</td>
-                                <td>{m.stockAnterior}</td>
-                                <td>{m.stockNuevo}</td>
-                                <td>{m.motivo || "—"}</td>
-                                <td>{m.usuario || "—"}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      )}
-                    </td>
-                  </tr>
-                )}
-
-                {imageRowId === p.id && (
-                  <tr className="image-row">
-                    <td colSpan={7}>
-                      <div className="image-form">
-                        {imagePreview ? (
-                          <img className="image-preview" src={imagePreview} alt={p.articulo} />
-                        ) : (
-                          <div className="image-preview image-preview-empty">Sin imagen</div>
+                        {p.fotoUrl && (
+                          <button
+                            type="button"
+                            className="btn-danger"
+                            onClick={() => handleImageRemove(p)}
+                            disabled={imageSaving}
+                          >
+                            Quitar imagen
+                          </button>
                         )}
-                        <div className="image-form-actions">
-                          <input type="file" accept="image/*" onChange={handleImageFile} />
-                          <div>
-                            <button
-                              type="button"
-                              className="btn-primary"
-                              onClick={() => handleImageSave(p)}
-                              disabled={imageSaving || !imagePreview}
-                            >
-                              Guardar imagen
-                            </button>
-                            {p.fotoUrl && (
-                              <button
-                                type="button"
-                                className="btn-danger"
-                                onClick={() => handleImageRemove(p)}
-                                disabled={imageSaving}
-                              >
-                                Quitar imagen
-                              </button>
-                            )}
-                          </div>
-                          {imageError && <span className="error">{imageError}</span>}
-                        </div>
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
-            {products.length === 0 && (
-              <tr>
-                <td colSpan={7} className="empty-state">
-                  No hay productos que coincidan con la búsqueda.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                      {imageError && <span className="error">{imageError}</span>}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {products.length === 0 && <p className="empty-state">No hay productos que coincidan con la búsqueda.</p>}
+        </div>
       )}
     </div>
   );
