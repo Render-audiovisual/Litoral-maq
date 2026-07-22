@@ -33,6 +33,7 @@ export const api = {
     return request(`/products${qs ? `?${qs}` : ""}`, { ...(token ? { token } : {}) });
   },
   getCategorias: (token) => request("/products/categorias", { ...(token ? { token } : {}) }),
+  getProduct: (id) => request(`/products/${id}`),
   createProduct: (token, data) => request("/products", { method: "POST", body: data, token }),
   updateProduct: (token, id, data) => request(`/products/${id}`, { method: "PUT", body: data, token }),
   deleteProduct: (token, id) => request(`/products/${id}`, { method: "DELETE", token }),

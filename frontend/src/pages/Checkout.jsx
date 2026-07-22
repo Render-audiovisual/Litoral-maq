@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 
 export default function Checkout() {
@@ -14,12 +14,12 @@ export default function Checkout() {
   if (items.length === 0) {
     return (
       <div className="checkout-page">
-        <header className="checkout-header">
-          <button className="btn-back" onClick={() => navigate("/")}>
+        <div className="page-title-row">
+          <Link to="/productos" className="btn-back">
             ← Volver al catálogo
-          </button>
+          </Link>
           <h1>Carrito</h1>
-        </header>
+        </div>
         <p className="empty-state">Tu carrito está vacío.</p>
       </div>
     );
@@ -67,12 +67,12 @@ ${tipoEntrega === "envio" ? `Dirección: ${direccion}\n` : ""}
 
   return (
     <div className="checkout-page">
-      <header className="checkout-header">
-        <button className="btn-back" onClick={() => navigate("/")}>
+      <div className="page-title-row">
+        <Link to="/productos" className="btn-back">
           ← Volver al catálogo
-        </button>
+        </Link>
         <h1>Carrito</h1>
-      </header>
+      </div>
 
       <div className="checkout-container">
         <div className="checkout-items">

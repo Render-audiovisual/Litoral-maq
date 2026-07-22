@@ -39,6 +39,22 @@ router.get("/categorias", async (req, res) => {
   res.json(rows.map((r) => r.categoria));
 });
 
+router.get("/:id", async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id)) {
+    return res.status(404).json({ error: "Producto no encontrado" });
+  }
+
+  const product = await prisma.product.findUnique({ where: { id } });
+
+  if (!product) {
+    return res.status(404).json({ error: "Producto no encontrado" });
+  }
+
+  res.json({ ...product, lowStock: product.stock < LOW_STOCK_THRESHOLD });
+});
+
 router.use(requireAuth);
 
 router.post("/", async (req, res) => {
