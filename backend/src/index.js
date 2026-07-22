@@ -8,7 +8,7 @@ const productRoutes = require("./routes/products");
 
 const app = express();
 
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json());
 
 app.locals.adminPasswordHash = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "cambiar123", 10);

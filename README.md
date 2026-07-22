@@ -56,16 +56,30 @@ URLs:
 
 ## Deploy a Render (gratis)
 
-- Backend: nuevo "Web Service" apuntando a `backend/`, build command
-  `npm install && npx prisma migrate deploy`, start command `npm start`.
-  Variables de entorno: `DATABASE_URL`, `JWT_SECRET`, `ADMIN_USER`,
-  `ADMIN_PASSWORD`, `CORS_ORIGIN` (URL del frontend).
-- Frontend: nuevo "Static Site" apuntando a `frontend/`, build command
-  `npm install && npm run build`, publish directory `dist`. Variable de
-  entorno `VITE_API_URL` apuntando a la URL del backend en Render.
-- Para producción, cambiar `datasource.provider` en
-  `backend/prisma/schema.prisma` de `sqlite` a `postgresql` y usar la
-  `DATABASE_URL` de una base Postgres gratuita de Render.
+Este repo incluye un `render.yaml` (Blueprint) que crea de una sola vez la
+base Postgres, el backend y el frontend. En el dashboard de Render:
+"New" → "Blueprint" → conectar este repo de GitHub → Render lee
+`render.yaml` y muestra los 3 recursos a crear.
+
+Variables que Render va a pedir a mano (marcadas `sync: false` en el
+blueprint, porque son secretos/config específica de cada quien):
+- Backend: `ADMIN_USER`, `ADMIN_PASSWORD`, `CORS_ORIGIN` (la URL del
+  frontend una vez creado, ej. `https://litoral-maq-frontend.onrender.com`).
+- Frontend: `VITE_API_URL` (la URL del backend + `/api`, ej.
+  `https://litoral-maq-backend.onrender.com/api`), `VITE_WHATSAPP_PHONE`.
+
+`DATABASE_URL` y `JWT_SECRET` los genera Render automáticamente.
+
+Nota técnica: producción usa Postgres, no SQLite. Por eso existe
+`backend/prisma/schema.production.prisma` (idéntico a `schema.prisma`
+pero con `provider = "postgresql"`) — el build command del backend lo
+usa explícitamente. El `schema.prisma` normal sigue siendo SQLite y es
+el que se usa en desarrollo local; no hace falta tocarlo.
+
+Los 461 productos importados desde el Google Sheet viven solo en la base
+local (SQLite, no se sube a git) — después del primer deploy hay que
+volver a correr la importación CSV contra la base de producción desde el
+panel admin ya en Render.
 
 ## Próximas etapas
 

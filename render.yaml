@@ -1,0 +1,39 @@
+databases:
+  - name: litoral-maq-db
+    plan: free
+    databaseName: litoral_maq
+    user: litoral_maq
+
+services:
+  - type: web
+    name: litoral-maq-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate --schema=prisma/schema.production.prisma && npx prisma db push --schema=prisma/schema.production.prisma
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: litoral-maq-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USER
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+
+  - type: web
+    name: litoral-maq-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_WHATSAPP_PHONE
+        sync: false
