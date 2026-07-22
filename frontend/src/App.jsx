@@ -4,6 +4,7 @@ import { useAuth } from "./context/AuthContext.jsx";
 import Login from "./pages/Login.jsx";
 import AdminProducts from "./pages/AdminProducts.jsx";
 import AdminPhotoUpload from "./pages/AdminPhotoUpload.jsx";
+import AdminStock from "./pages/AdminStock.jsx";
 import Home from "./pages/Home.jsx";
 import Catalog from "./pages/Catalog.jsx";
 import ProductDetail from "./pages/ProductDetail.jsx";
@@ -40,6 +41,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AdminPhotoUpload />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/stock"
+        element={
+          <ProtectedRoute>
+            <AdminStock />
           </ProtectedRoute>
         }
       />

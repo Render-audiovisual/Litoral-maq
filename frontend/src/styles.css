@@ -1232,3 +1232,246 @@ a.btn-danger {
     padding: 2rem 1rem;
   }
 }
+
+/* Admin Stock Page */
+.admin-stock-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.error-banner {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.stock-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.search-input,
+.category-select {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.category-select {
+  min-width: 200px;
+}
+
+.search-input:focus,
+.category-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.loading,
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+}
+
+.table-container {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.stock-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.stock-table thead {
+  background: var(--color-surface-alt);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.stock-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.stock-table tbody tr {
+  border-bottom: 1px solid var(--color-border-light);
+  transition: background-color 0.2s;
+}
+
+.stock-table tbody tr:hover {
+  background: var(--color-surface-alt);
+}
+
+.stock-table td {
+  padding: 0.9rem 1rem;
+  color: var(--color-text);
+}
+
+.stock-table td.categoria {
+  font-weight: 500;
+  color: var(--color-primary);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stock-table td.nombre {
+  font-weight: 500;
+  max-width: 250px;
+}
+
+.stock-table td.codigo {
+  color: var(--color-text-muted);
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.stock-table td.precio {
+  text-align: right;
+  font-weight: 600;
+  min-width: 100px;
+}
+
+.stock-table td.stock {
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+  min-width: 100px;
+  transition: background-color 0.2s;
+}
+
+.stock-table td.stock:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+.stock-table td.stock.stock-low {
+  color: #dc2626;
+  background-color: #fee2e2;
+  padding: 0.6rem 1rem;
+  margin: 0.2rem;
+}
+
+.stock-table td.stock.stock-empty {
+  color: #991b1b;
+  background-color: #fecaca;
+  font-weight: 700;
+  padding: 0.6rem 1rem;
+  margin: 0.2rem;
+}
+
+.stock-display {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.stock-editor {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.stock-input {
+  width: 60px;
+  padding: 0.4rem 0.6rem;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  font-family: monospace;
+}
+
+.stock-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.stock-info {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--color-primary);
+}
+
+.stock-info p {
+  margin: 0.5rem 0;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.stock-info strong {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.low-stock-info strong {
+  color: #dc2626;
+}
+
+.empty-stock-info strong {
+  color: #991b1b;
+}
+
+@media (max-width: 768px) {
+  .stock-controls {
+    flex-direction: column;
+  }
+
+  .search-input,
+  .category-select {
+    width: 100%;
+  }
+
+  .stock-table {
+    font-size: 0.85rem;
+  }
+
+  .stock-table th,
+  .stock-table td {
+    padding: 0.6rem 0.5rem;
+  }
+
+  .stock-table td.nombre {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
