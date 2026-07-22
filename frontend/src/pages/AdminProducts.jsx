@@ -1,40 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import Papa from "papaparse";
 import { useAuth } from "../context/AuthContext.jsx";
 import { api } from "../api.js";
+import { compressImage } from "../utils/image.js";
 
 const emptyForm = { codigo: "", articulo: "", precio: "", stock: "", categoria: "", marca: "" };
 const emptyMovement = { tipo: "entrada", valor: "", motivo: "" };
 
 const TIPO_LABELS = { entrada: "Entrada", salida: "Salida", ajuste: "Ajuste" };
 
-const IMAGE_MAX_WIDTH = 800;
-const IMAGE_QUALITY = 0.8;
-
 function formatFecha(iso) {
   return new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
-}
-
-function compressImage(file, maxWidth = IMAGE_MAX_WIDTH, quality = IMAGE_QUALITY) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error("No se pudo procesar la imagen"));
-      img.onload = () => {
-        const scale = Math.min(1, maxWidth / img.width);
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", quality));
-      };
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
 }
 
 export default function AdminProducts() {
@@ -305,6 +282,9 @@ export default function AdminProducts() {
           hidden
           onChange={handleImportFile}
         />
+        <Link to="/admin/fotos" className="btn-secondary">
+          📷 Cargar fotos
+        </Link>
       </div>
 
       {lowStockCount > 0 && (

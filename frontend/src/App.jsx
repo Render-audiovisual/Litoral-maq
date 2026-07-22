@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext.jsx";
 import Login from "./pages/Login.jsx";
 import AdminProducts from "./pages/AdminProducts.jsx";
+import AdminPhotoUpload from "./pages/AdminPhotoUpload.jsx";
 import Home from "./pages/Home.jsx";
 import Catalog from "./pages/Catalog.jsx";
 import ProductDetail from "./pages/ProductDetail.jsx";
@@ -31,6 +32,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AdminProducts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/fotos"
+        element={
+          <ProtectedRoute>
+            <AdminPhotoUpload />
           </ProtectedRoute>
         }
       />
