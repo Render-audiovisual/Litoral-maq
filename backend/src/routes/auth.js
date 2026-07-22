@@ -11,7 +11,8 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ error: "Usuario y contraseña son requeridos" });
   }
 
-  const validUser = username === process.env.ADMIN_USER;
+  const validUser =
+    String(username).trim().toLowerCase() === String(process.env.ADMIN_USER || "").toLowerCase();
   const validPassword =
     validUser && (await bcrypt.compare(password, req.app.locals.adminPasswordHash));
 

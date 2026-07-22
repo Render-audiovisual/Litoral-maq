@@ -15,7 +15,7 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await login(username, password);
+      await login(username.trim(), password);
       navigate("/");
     } catch (err) {
       setError(err.message);
@@ -37,6 +37,9 @@ export default function Login() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             autoFocus
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck="false"
             required
           />
         </label>
