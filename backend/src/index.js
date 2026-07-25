@@ -8,7 +8,30 @@ const productRoutes = require("./routes/products");
 
 const app = express();
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
+// Orígenes permitidos: los conocidos del proyecto + lo que diga CORS_ORIGIN
+// (acepta varios separados por coma). Así un dominio nuevo no exige tocar el env.
+const DEFAULT_ORIGINS = [
+  "https://litoralmaqrender.rendercorrientes.com",
+  "https://litoral-maq-frontend.onrender.com",
+];
+const envOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((o) => o.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+const allowAll = envOrigins.includes("*");
+const allowedOrigins = [...new Set([...DEFAULT_ORIGINS, ...envOrigins])];
+
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      // Requests sin Origin (curl, apps móviles, server-to-server) pasan.
+      if (!origin || allowAll || allowedOrigins.includes(origin)) return cb(null, true);
+      // localhost en cualquier puerto, para desarrollo.
+      if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return cb(null, true);
+      return cb(null, false);
+    },
+  })
+);
 
 app.locals.adminPasswordHash = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "cambiar123", 10);
 
