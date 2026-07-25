@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import PlaceholderIcon from "./PlaceholderIcon.jsx";
+import { api } from "../api.js";
 
 export default function ProductCard({ product, onAddToCart }) {
   const handleAdd = (e) => {
@@ -14,8 +15,13 @@ export default function ProductCard({ product, onAddToCart }) {
       to={`/producto/${product.id}`}
       className={`product-card ${product.stock === 0 ? "out-of-stock" : ""}`}
     >
-      {product.fotoUrl ? (
-        <img className="product-card-image" src={product.fotoUrl} alt={product.articulo} />
+      {product.hasFoto ? (
+        <img
+          className="product-card-image"
+          src={api.fotoUrl(product)}
+          alt={product.articulo}
+          loading="lazy"
+        />
       ) : (
         <div className="product-card-image product-card-image-empty">
           <PlaceholderIcon className="placeholder-icon" />

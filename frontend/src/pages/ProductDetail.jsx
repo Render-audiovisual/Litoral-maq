@@ -50,8 +50,8 @@ export default function ProductDetail() {
       </p>
 
       <div className="product-detail">
-        {product.fotoUrl ? (
-          <img className="product-detail-image" src={product.fotoUrl} alt={product.articulo} />
+        {product.hasFoto ? (
+          <img className="product-detail-image" src={api.fotoUrl(product)} alt={product.articulo} />
         ) : (
           <div className="product-detail-image product-detail-image-empty">
             <PlaceholderIcon className="placeholder-icon placeholder-icon-lg" />

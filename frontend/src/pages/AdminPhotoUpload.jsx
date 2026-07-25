@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { api } from "../api.js";
 import { compressImage } from "../utils/image.js";
@@ -17,13 +16,13 @@ function findNextPending(order, fromIndex, direction) {
   if (n === 0) return -1;
   for (let step = 1; step <= n; step++) {
     const idx = (fromIndex + direction * step + n * 10) % n;
-    if (!order[idx].fotoUrl) return idx;
+    if (!order[idx].hasFoto) return idx;
   }
   return -1;
 }
 
 export default function AdminPhotoUpload() {
-  const { token, username, logout } = useAuth();
+  const { token } = useAuth();
   const [order, setOrder] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -45,11 +44,12 @@ export default function AdminPhotoUpload() {
       .finally(() => setLoading(false));
   }, [token]);
 
-  const pendingCount = useMemo(() => order.filter((p) => !p.fotoUrl).length, [order]);
+  const pendingCount = useMemo(() => order.filter((p) => !p.hasFoto).length, [order]);
   const current = cursorIndex >= 0 && cursorIndex < order.length ? order[cursorIndex] : null;
 
   useEffect(() => {
-    setPreview(current?.fotoUrl || null);
+    // La foto existente se muestra desde el endpoint; una recién elegida, como data URL.
+    setPreview(current?.hasFoto ? api.fotoUrl(current) : null);
   }, [current?.id]);
 
   const searchMatches = useMemo(() => {
@@ -89,13 +89,17 @@ export default function AdminPhotoUpload() {
     setCursorIndex((idx) => Math.max(0, idx - 1));
   };
 
+  // Solo hay algo nuevo para guardar si el preview es un data URL recién elegido
+  // (la foto ya guardada se muestra como URL del endpoint, no hay que re-subirla).
+  const hasNewPhoto = Boolean(preview && preview.startsWith("data:"));
+
   const handleSaveAndNext = async () => {
-    if (!current || !preview) return;
+    if (!current || !hasNewPhoto) return;
     setSaving(true);
     setError("");
     try {
       await api.updateProduct(token, current.id, { fotoUrl: preview });
-      setOrder((prev) => prev.map((p) => (p.id === current.id ? { ...p, fotoUrl: preview } : p)));
+      setOrder((prev) => prev.map((p) => (p.id === current.id ? { ...p, hasFoto: true } : p)));
       goNextPending();
     } catch (err) {
       setError(err.message);
@@ -110,7 +114,7 @@ export default function AdminPhotoUpload() {
     setError("");
     try {
       await api.updateProduct(token, current.id, { fotoUrl: null });
-      setOrder((prev) => prev.map((p) => (p.id === current.id ? { ...p, fotoUrl: null } : p)));
+      setOrder((prev) => prev.map((p) => (p.id === current.id ? { ...p, hasFoto: false } : p)));
       setPreview(null);
     } catch (err) {
       setError(err.message);
@@ -125,22 +129,14 @@ export default function AdminPhotoUpload() {
 
   return (
     <div className="photo-upload-page">
-      <header className="admin-header">
+      <div className="page-header">
         <div>
-          <h1>Litoral Maq</h1>
-          <p className="subtitle">Carga rápida de fotos</p>
+          <h1>Carga de fotos</h1>
+          <p className="page-subtitle">
+            Subí imágenes de los productos directamente desde el celular.
+          </p>
         </div>
-        <div className="admin-header-right">
-          <span>Hola, {username}</span>
-          <button className="btn-secondary" onClick={logout}>
-            Salir
-          </button>
-        </div>
-      </header>
-
-      <Link to="/admin" className="btn-back">
-        ← Volver al panel
-      </Link>
+      </div>
 
       <p className="photo-progress">
         {pendingCount} de {order.length} productos sin foto
@@ -159,7 +155,7 @@ export default function AdminPhotoUpload() {
               <li key={p.id}>
                 <button type="button" onClick={() => jumpTo(p)}>
                   <span className="product-code">{p.codigo}</span> {p.articulo}
-                  {p.fotoUrl ? " ✓" : ""}
+                  {p.hasFoto ? " ✓" : ""}
                 </button>
               </li>
             ))}
@@ -194,7 +190,7 @@ export default function AdminPhotoUpload() {
           <button
             className="btn-primary btn-large"
             onClick={handleSaveAndNext}
-            disabled={saving || !preview}
+            disabled={saving || !hasNewPhoto}
           >
             {saving ? "Guardando..." : "Guardar y siguiente"}
           </button>
@@ -206,7 +202,7 @@ export default function AdminPhotoUpload() {
             <button className="btn-secondary" onClick={goNextPending} disabled={saving}>
               Saltar →
             </button>
-            {current.fotoUrl && (
+            {current.hasFoto && (
               <button className="btn-danger" onClick={handleRemovePhoto} disabled={saving}>
                 Quitar foto
               </button>

@@ -20,7 +20,10 @@ export function CartProvider({ children }) {
           i.id === product.id ? { ...i, cantidad: i.cantidad + cantidad } : i
         );
       }
-      return [...prev, { ...product, cantidad }];
+      // Guardar solo lo necesario: esto va a localStorage (cuota ~5MB)
+      // y no debe arrastrar campos pesados del producto.
+      const { id, codigo, articulo, precio, stock, categoria } = product;
+      return [...prev, { id, codigo, articulo, precio, stock, categoria, cantidad }];
     });
   };
 

@@ -6,6 +6,17 @@ const { requireAuth } = require("../middleware/auth");
 const router = express.Router();
 const LOW_STOCK_THRESHOLD = 5;
 
+// Serialización pública: nunca mandar el base64 en listados/fichas.
+// Las imágenes se sirven por GET /:id/foto, que el navegador cachea.
+function toPublicProduct(p) {
+  const { fotoUrl, ...rest } = p;
+  return {
+    ...rest,
+    hasFoto: Boolean(fotoUrl),
+    lowStock: p.stock < LOW_STOCK_THRESHOLD,
+  };
+}
+
 function isAuthenticated(req) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
@@ -42,7 +53,7 @@ router.get("/", async (req, res) => {
     orderBy: { articulo: "asc" },
   });
 
-  res.json(products.map((p) => ({ ...p, lowStock: p.stock < LOW_STOCK_THRESHOLD })));
+  res.json(products.map(toPublicProduct));
 });
 
 router.get("/categorias", async (req, res) => {
@@ -67,7 +78,42 @@ router.get("/:id", async (req, res) => {
     return res.status(404).json({ error: "Producto no encontrado" });
   }
 
-  res.json({ ...product, lowStock: product.stock < LOW_STOCK_THRESHOLD });
+  res.json(toPublicProduct(product));
+});
+
+router.get("/:id/foto", async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id)) {
+    return res.status(404).json({ error: "Producto no encontrado" });
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: { fotoUrl: true, activo: true, updatedAt: true },
+  });
+
+  if (!product || !product.fotoUrl || (!product.activo && !isAuthenticated(req))) {
+    return res.status(404).json({ error: "Foto no encontrada" });
+  }
+
+  // fotoUrl es un data URL: data:image/jpeg;base64,<payload>
+  const match = /^data:(image\/[a-z+.-]+);base64,(.+)$/i.exec(product.fotoUrl);
+  if (!match) {
+    return res.status(404).json({ error: "Foto no encontrada" });
+  }
+
+  const etag = `"foto-${id}-${product.updatedAt.getTime()}"`;
+  if (req.headers["if-none-match"] === etag) {
+    return res.status(304).end();
+  }
+
+  res.set({
+    "Content-Type": match[1],
+    "Cache-Control": "public, max-age=31536000, immutable",
+    ETag: etag,
+  });
+  res.send(Buffer.from(match[2], "base64"));
 });
 
 router.use(requireAuth);
@@ -120,6 +166,13 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   const id = Number(req.params.id);
   const { codigo, articulo, precio, categoria, marca, activo, fotoUrl } = req.body || {};
+
+  // Ignorarlo en silencio hacía que la UI mostrara un stock que nunca se guardó.
+  if (req.body && req.body.stock !== undefined) {
+    return res.status(400).json({
+      error: "El stock no se modifica acá. Usá POST /:id/movimientos.",
+    });
+  }
 
   try {
     const product = await prisma.product.update({

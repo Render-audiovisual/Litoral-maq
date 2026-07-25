@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
 async function request(path, { method = "GET", body, token } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -24,6 +24,9 @@ async function request(path, { method = "GET", body, token } = {}) {
 }
 
 export const api = {
+  // URL de la imagen de un producto. El ?v= invalida la caché cuando la foto cambia.
+  fotoUrl: (product) =>
+    `${API_URL}/products/${product.id}/foto?v=${encodeURIComponent(product.updatedAt || "")}`,
   login: (username, password) => request("/auth/login", { method: "POST", body: { username, password } }),
   getProducts: (token, { search, categoria } = {}) => {
     const params = new URLSearchParams();
